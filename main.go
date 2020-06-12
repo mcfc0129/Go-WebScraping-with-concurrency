@@ -3,7 +3,6 @@ package main
 import (
 	"bufio"
 	"encoding/csv"
-	"fmt"
 	"log"
 	"net/url"
 	"os"
@@ -21,6 +20,12 @@ func main() {
 	EncodingCSV(url, word)
 }
 
+func test() {
+	send, word := CreateURL()
+	url := GetPage(send)
+	EncodingCSV(url, word)
+}
+
 func CreateURL() (<-chan string, string) {
 	var word string
 	s := bufio.NewScanner(os.Stdin)
@@ -30,20 +35,20 @@ func CreateURL() (<-chan string, string) {
 	}
 	enword := url.QueryEscape(word)
 
-	send := make(chan string)
+	send := make(chan string, 10)
 	go func() {
 		defer close(send)
 		for i := 1; i < 700; i += 20 {
 			a := strconv.Itoa(i)
 			urls := starturl1 + enword + starturl2 + a
-			send <- url
+			send <- urls
 		}
 	}()
 	return send, word
 }
 
 func GetPage(reci <-chan string) <-chan string {
-	send := make(chan string)
+	send := make(chan string, 10)
 	go func() {
 		defer close(send)
 		for i := range reci {
@@ -80,11 +85,5 @@ func EncodingCSV(reci <-chan string, word string) {
 			log.Fatal("cannot write record:", err)
 		}
 		i++
-	}
-}
-
-func test(reci <-chan string) {
-	for i := range reci {
-		fmt.Println(i)
 	}
 }
